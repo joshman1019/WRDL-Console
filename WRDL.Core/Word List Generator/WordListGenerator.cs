@@ -11,10 +11,10 @@ namespace WRDL.Core.Engines
             int currentLine = 12;
             int position = 0;
             List<(char, int)> characterStateList = new List<(char, int)>();
-            foreach (char[] guess in game.Guesses)
+            for (int i = 0; i < game.Guesses.Count; i++)
             {
                 Console.SetCursorPosition(74, currentLine);
-                foreach (char letter in guess)
+                foreach (char letter in game.Guesses[i])
                 {
                     int stateExact = game.TestExactPosition(letter, position);
                     int stateRelative = game.TestRelativePosition(letter);
@@ -35,22 +35,24 @@ namespace WRDL.Core.Engines
                     {
                         case 1:
                             Console.ForegroundColor = ConsoleColor.DarkGray;
-                            if(characterStateList.Contains((letter, 2)) || characterStateList.Contains((letter, 3)))
-                            {
+                            if (characterStateList.Contains((letter, 2)) || characterStateList.Contains((letter, 3)))
                                 break;
-                            }
                             characterStateList.Add((letter, 1));
                             break;
                         case 2:
                             Console.ForegroundColor = ConsoleColor.DarkYellow;
-                            if(characterStateList.Contains((letter, 3)))
-                            {
-                                break; 
-                            }
+                            if (characterStateList.Contains((letter, 3)))
+                                break;
+                            if (characterStateList.Contains((letter, 1)))
+                                characterStateList.Remove((letter, 1));
                             characterStateList.Add((letter, 2));
                             break;
                         case 3:
                             Console.ForegroundColor = ConsoleColor.Green;
+                            if (characterStateList.Contains((letter, 1)))
+                                characterStateList.Remove((letter, 1));
+                            if (characterStateList.Contains((letter, 2)))
+                                characterStateList.Remove((letter, 2));
                             characterStateList.Add((letter, 3));
                             break;
                         default:
@@ -103,15 +105,15 @@ namespace WRDL.Core.Engines
                 {
                     Console.ForegroundColor = ConsoleColor.White;
                 }
-                if(currentColumn >= 35)
+                if (currentColumn >= 35)
                 {
                     currentColumn = 15;
-                    startingLine += 1; 
+                    startingLine += 1;
                 }
                 Console.SetCursorPosition(currentColumn, startingLine);
                 Console.Write(availableChar);
                 currentColumn += 5;
-                Console.ResetColor(); 
+                Console.ResetColor();
             }
         }
     }
