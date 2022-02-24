@@ -1,6 +1,7 @@
 using WRDL.Core.Engines;
 using WRDL.Core.DataModels;
 using System.Data;
+using System.Text; 
 
 namespace WRDL.Core.GameLogic
 {
@@ -269,8 +270,22 @@ namespace WRDL.Core.GameLogic
 
         public void EndScreenResultsGenerator(Game game)
         {
-            int consoleRow = 15;
+            // Print the word on the end screen 
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            StringBuilder wordResult = new StringBuilder();
+            wordResult.Append("THE WORD WAS "); 
+            foreach (char letter in game.Word)
+            {
+                wordResult.Append(letter); 
+            }
+            Console.SetCursorPosition((Console.WindowWidth - wordResult.ToString().Length) / 2, 15);
+            Console.Write(wordResult); 
+
+            // Reset the conosle color
+            Console.ResetColor(); 
+            
             // Set cursor position to below the result text
+            int consoleRow = 16;
             foreach (char[] guess in game.Guesses)
             {
                 int charPosition = 0;
@@ -316,6 +331,10 @@ namespace WRDL.Core.GameLogic
                 }
                 consoleRow += 1;
             }
+
+            // Will clear the 7th line of the guesses if a losing screen is printed
+            Console.SetCursorPosition(0, 22);
+            Console.Write("".PadRight(Console.WindowWidth)); 
         }
     }
 }
