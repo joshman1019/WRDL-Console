@@ -1,7 +1,8 @@
 using WRDL.Core.Engines;
 using WRDL.Core.DataModels;
 using System.Data;
-using System.Text; 
+using System.Text;
+using System.Windows;
 
 namespace WRDL.Core.GameLogic
 {
@@ -42,21 +43,21 @@ namespace WRDL.Core.GameLogic
             // showing letter results
             var resultString = new string(game.CurrentGuess);
             var dictioanry = GetGameTable();
-            bool invalid = true; 
+            bool invalid = true;
             foreach (DataRow wordRow in dictioanry.Item1.Tables[0].Rows)
             {
                 if (wordRow[0].ToString() == resultString)
                 {
                     invalid = false;
-                    break; 
+                    break;
                 }
             }
 
-            if(invalid)
+            if (invalid)
             {
                 game.CurrentGuess = new char[5];
                 game.CurrentPosition = 0;
-                return false; 
+                return false;
             }
 
             // Determine if word was a winner
@@ -268,22 +269,78 @@ namespace WRDL.Core.GameLogic
             return (ds, ds.Tables[0].Rows.Count);
         }
 
+        private void PublishResultsToClipboard(Game game)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("WRDL Console (A Wordle Clone) - by: Joshua Santiago");
+            sb.AppendLine($"Game Results for {DateTime.Today.ToShortDateString()}"); 
+            int charPosition;
+            foreach (char[] guess in game.Guesses)
+            {
+                charPosition = 0;
+                StringBuilder lineBuilder = new StringBuilder();
+                foreach (char letter in guess)
+                {
+                    int exactState = game.TestExactPosition(letter, charPosition);
+                    int relativeState = game.TestRelativePosition(letter);
+                    int finalState;
+                    if (exactState == relativeState)
+                    {
+                        finalState = exactState;
+                    }
+                    else if (exactState > relativeState)
+                    {
+                        finalState = exactState;
+                    }
+                    else
+                    {
+                        finalState = relativeState;
+                    }
+
+                    switch (finalState)
+                    {
+                        case 1:
+                            sb.Append("⬛");
+                            break;
+                        case 2:
+                            sb.Append("🟨");
+                            break;
+                        case 3:
+                            sb.Append("🟩");
+                            break;
+                        default:
+                            break;
+                    }
+                    charPosition += 1;
+                }
+                sb.AppendLine(lineBuilder.ToString());
+            }
+            int count = game.Guesses.Count == 7 ? 6 : game.Guesses.Count; 
+            sb.AppendLine($"Attempts: {count}/6"); 
+            TextCopy.ClipboardService.SetText(sb.ToString());
+            Console.SetCursorPosition(0, 0);
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("Game results have been successfully copied to your clipboard");
+            Console.WriteLine("Press ENTER to exit");
+            Console.ResetColor(); 
+        }
+
         public void EndScreenResultsGenerator(Game game)
         {
             // Print the word on the end screen 
             Console.ForegroundColor = ConsoleColor.Yellow;
             StringBuilder wordResult = new StringBuilder();
-            wordResult.Append("THE WORD WAS "); 
+            wordResult.Append("THE WORD WAS ");
             foreach (char letter in game.Word)
             {
-                wordResult.Append(letter); 
+                wordResult.Append(letter);
             }
             Console.SetCursorPosition((Console.WindowWidth - wordResult.ToString().Length) / 2, 15);
-            Console.Write(wordResult); 
+            Console.Write(wordResult);
 
             // Reset the conosle color
-            Console.ResetColor(); 
-            
+            Console.ResetColor();
+
             // Set cursor position to below the result text
             int consoleRow = 16;
             foreach (char[] guess in game.Guesses)
@@ -334,7 +391,8 @@ namespace WRDL.Core.GameLogic
 
             // Will clear the 7th line of the guesses if a losing screen is printed
             Console.SetCursorPosition(0, 22);
-            Console.Write("".PadRight(Console.WindowWidth)); 
+            Console.Write("".PadRight(Console.WindowWidth));
+            PublishResultsToClipboard(game);
         }
     }
 }
